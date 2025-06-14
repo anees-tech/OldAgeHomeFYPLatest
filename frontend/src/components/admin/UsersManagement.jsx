@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import axios from "axios" // Import axios
+import axios from "axios"
+import { FaUserPlus, FaEdit, FaTrashAlt } from "react-icons/fa"; // Import React Icons
 import "../../styles/users-management.css"
-import "../../styles/admin.css" // Import admin styles for modal
+// import "../../styles/admin.css" // Import admin styles for modal
 
 function UsersManagement() {
   const [users, setUsers] = useState([])
@@ -12,8 +13,8 @@ function UsersManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterRole, setFilterRole] = useState("all")
   const [showAddModal, setShowAddModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false) // State for edit modal
-  const [editingUser, setEditingUser] = useState(null) // State for user being edited
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
   const [newUser, setNewUser] = useState({
     firstName: "",
     lastName: "",
@@ -25,30 +26,29 @@ function UsersManagement() {
     isAdmin: false,
   })
 
-  // --- API Base URL ---
+  // Updated API Base URL
   const API_URL = "http://localhost:5000/api/auth"
 
   useEffect(() => {
     fetchUsers()
   }, [])
 
-  // --- Fetch Users ---
+  // Fetch Users
   const fetchUsers = async () => {
     setLoading(true)
-    setError("") // Clear previous errors
+    setError("")
     try {
-      // Fetch users from the correct backend endpoint
-      const response = await axios.get(`${API_URL}/users`) // Use the new GET /users route
+      const response = await axios.get(`${API_URL}/users`)
       setUsers(response.data)
     } catch (err) {
       console.error("Fetch Users Error:", err)
-      setError(err.response?.data?.message || "Failed to fetch users. Ensure the backend is running and you have admin rights.")
+      setError(err.response?.data?.message || "Failed to fetch users. Please ensure the backend is running.")
     } finally {
       setLoading(false)
     }
   }
 
-  // --- Add User ---
+  // Add User
   const handleAddUser = async (e) => {
     e.preventDefault()
     setError("")
@@ -63,163 +63,128 @@ function UsersManagement() {
     }
 
     try {
-      // Use the POST /register route to add a new user
       const response = await axios.post(`${API_URL}/register`, newUser)
-
-      setUsers([response.data.user, ...users]) // Add new user to the beginning of the list
+      await fetchUsers() // Refresh the users list
       setShowAddModal(false)
-      setNewUser({ // Reset form
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        role: "family",
-        isAdmin: false,
-      })
+      resetNewUserForm()
+      alert("User added successfully!")
     } catch (err) {
       console.error("Add User Error:", err)
-      setError(err.response?.data?.message || "Failed to add user.")
+      setError(err.response?.data?.message || "Failed to add user")
     }
   }
 
-  // --- Delete User ---
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      setError("")
-      try {
-        // Use the DELETE /users/:id route
-        await axios.delete(`${API_URL}/users/${userId}`)
-        setUsers(users.filter((user) => user._id !== userId)) // Remove user from state
-      } catch (err) {
-        console.error("Delete User Error:", err)
-        setError(err.response?.data?.message || "Failed to delete user.")
-      }
-    }
-  }
-
-  // --- Edit User ---
-  const handleEditClick = (user) => {
-    setEditingUser({ ...user }) // Set the user to be edited (create a copy)
-    setShowEditModal(true) // Show the edit modal
-    setError("")
-  }
-
-  const handleUpdateUser = async (e) => {
+  // Edit User
+  const handleEditUser = async (e) => {
     e.preventDefault()
     setError("")
-    if (!editingUser || !editingUser._id) return
 
     try {
-      // Use the PUT /users/:id route
-      const response = await axios.put(`${API_URL}/users/${editingUser._id}`, {
+      const updateData = {
         firstName: editingUser.firstName,
         lastName: editingUser.lastName,
         email: editingUser.email,
         phone: editingUser.phone,
         role: editingUser.role,
         isAdmin: editingUser.isAdmin,
-      })
+      }
 
-      // Update the user in the state
-      setUsers(users.map((user) => (user._id === editingUser._id ? response.data.user : user)))
+      await axios.put(`${API_URL}/users/${editingUser._id}`, updateData)
+      await fetchUsers() // Refresh the users list
       setShowEditModal(false)
       setEditingUser(null)
+      alert("User updated successfully!")
     } catch (err) {
-      console.error("Update User Error:", err)
-      setError(err.response?.data?.message || "Failed to update user.")
+      console.error("Edit User Error:", err)
+      setError(err.response?.data?.message || "Failed to update user")
     }
   }
 
-  // --- Input Handlers ---
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
+  // Delete User
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await axios.delete(`${API_URL}/users/${userId}`)
+        await fetchUsers() // Refresh the users list
+        alert("User deleted successfully!")
+      } catch (err) {
+        console.error("Delete User Error:", err)
+        setError(err.response?.data?.message || "Failed to delete user")
+      }
+    }
+  }
+
+  // Helper Functions
+  const resetNewUserForm = () => {
     setNewUser({
-      ...newUser,
-      [name]: type === "checkbox" ? checked : value,
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      role: "family",
+      isAdmin: false,
     })
   }
 
-  const handleEditInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setEditingUser({
-      ...editingUser,
-      [name]: type === "checkbox" ? checked : value,
-    })
+  const openEditModal = (user) => {
+    setEditingUser({ ...user })
+    setShowEditModal(true)
   }
 
-  // --- Filtering and Formatting ---
+  // Filter Users
   const filteredUsers = users.filter((user) => {
-    const searchLower = searchTerm.toLowerCase()
-    const matchesSearch =
-      (user.firstName?.toLowerCase() || "").includes(searchLower) ||
-      (user.lastName?.toLowerCase() || "").includes(searchLower) ||
-      (user.email?.toLowerCase() || "").includes(searchLower) ||
-      (user.phone?.toLowerCase() || "").includes(searchLower)
-
+    const matchesSearch = 
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    
     const matchesRole = filterRole === "all" || user.role === filterRole
-
+    
     return matchesSearch && matchesRole
   })
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A"
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    } catch (e) {
-      return "Invalid Date"
-    }
+  if (loading) {
+    return <div className="loading">Loading users...</div>
   }
 
-  const getRoleBadgeClass = (role) => {
-    switch (role) {
-      case "family": return "badge-blue"
-      case "resident": return "badge-green"
-      case "caregiver": return "badge-purple"
-      case "healthcare": return "badge-orange"
-      case "admin": return "badge-red" // Add admin badge style if needed
-      default: return "badge-gray"
-    }
-  }
-
-  // --- Render ---
   return (
     <div className="users-management">
-      {/* Header */}
-      <div className="users-header">
+      <div className="management-header">
         <h2>Users Management</h2>
-        <button className="btn primary-btn" onClick={() => { setShowAddModal(true); setError("") }}>
+        <button 
+          className="btn primary-btn" 
+          onClick={() => setShowAddModal(true)}
+        >
+          <FaUserPlus style={{ marginRight: '0.5rem' }} /> {/* React Icon for Add User */}
           Add New User
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="users-filters">
+      {/* Search and Filter Controls */}
+      <div className="search-filter-controls">
         <div className="search-box">
           <input
             type="text"
-            placeholder="Search users (name, email, phone)..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
         </div>
         <div className="filter-box">
-          <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="filter-select">
+          <select 
+            value={filterRole} 
+            onChange={(e) => setFilterRole(e.target.value)}
+            className="filter-select"
+          >
             <option value="all">All Roles</option>
             <option value="family">Family</option>
             <option value="resident">Resident</option>
             <option value="caregiver">Caregiver</option>
             <option value="healthcare">Healthcare</option>
             <option value="other">Other</option>
-            {/* Add admin filter if needed */}
-            {/* <option value="admin">Admin</option> */}
           </select>
         </div>
       </div>
@@ -227,68 +192,88 @@ function UsersManagement() {
       {/* Error Display */}
       {error && <div className="error-message">{error}</div>}
 
-      {/* User Table */}
-      {loading ? (
-        <div className="loading">Loading users...</div>
-      ) : (
-        <div className="users-table-container">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Joined</th>
-                <th>Admin</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="no-results">
-                    No users found matching criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user._id}>
-                    <td>{user.firstName} {user.lastName}</td>
-                    <td>{user.email}</td>
-                    <td>{user.phone}</td>
-                    <td>
-                      <span className={`role-badge ${getRoleBadgeClass(user.role)}`}>
-                        {user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'N/A'}
-                      </span>
-                    </td>
-                    <td>{formatDate(user.createdAt)}</td>
-                    <td>{user.isAdmin ? "Yes" : "No"}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="action-btn edit-btn"
-                          title="Edit User"
-                          onClick={() => handleEditClick(user)}
-                        >
-                          <span className="action-icon edit-icon"></span>
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          title="Delete User"
-                          onClick={() => handleDeleteUser(user._id)}
-                        >
-                          <span className="action-icon delete-icon"></span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* Users Stats */}
+      <div className="users-stats">
+        <div className="stat-card">
+          <h3>{users.length}</h3>
+          <p>Total Users</p>
         </div>
-      )}
+        <div className="stat-card">
+          <h3>{users.filter(u => u.role === 'resident').length}</h3>
+          <p>Residents</p>
+        </div>
+        <div className="stat-card">
+          <h3>{users.filter(u => u.role === 'caregiver').length}</h3>
+          <p>Caregivers</p>
+        </div>
+        <div className="stat-card">
+          <h3>{users.filter(u => u.isAdmin).length}</h3>
+          <p>Admins</p>
+        </div>
+      </div>
+
+      {/* User Table */}
+      <div className="users-table-container">
+        <table className="users-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th>Admin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map(user => (
+              <tr key={user._id}>
+                <td>
+                  <strong>{user.firstName} {user.lastName}</strong>
+                </td>
+                <td>{user.email}</td>
+                <td>{user.phone || 'N/A'}</td>
+                <td>
+                  <span className={`role-badge ${user.role}`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <span className={`admin-badge ${user.isAdmin ? 'yes' : 'no'}`}>
+                    {user.isAdmin ? 'Yes' : 'No'}
+                  </span>
+                </td>
+                <td>
+                  <div className="action-buttons">
+                    <button
+                      className="btn edit-btn"
+                      onClick={() => openEditModal(user)}
+                      title="Edit User"
+                    >
+                      <FaEdit /> {/* React Icon for Edit */}
+                    </button>
+                    <button
+                      className="btn delete-btn"
+                      onClick={() => handleDeleteUser(user._id)}
+                      title="Delete User"
+                    >
+                      <FaTrashAlt /> {/* React Icon for Delete */}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        
+        {filteredUsers.length === 0 && (
+          <div className="no-results">
+            No users found matching your criteria.
+          </div>
+        )}
+      </div>
 
       {/* Add User Modal */}
       {showAddModal && (
@@ -296,64 +281,113 @@ function UsersManagement() {
           <div className="modal-content">
             <div className="modal-header">
               <h3>Add New User</h3>
-              <button className="close-btn" onClick={() => setShowAddModal(false)}>×</button>
+              <button 
+                className="close-btn" 
+                onClick={() => {
+                  setShowAddModal(false)
+                  resetNewUserForm()
+                  setError("")
+                }}
+              >
+                ×
+              </button>
             </div>
             <form onSubmit={handleAddUser}>
               <div className="form-grid">
-                {/* Input fields (similar structure as before) */}
                 <div className="form-group">
-                  <label htmlFor="add-firstName">First Name</label>
-                  <input type="text" id="add-firstName" name="firstName" value={newUser.firstName} onChange={handleInputChange} required />
+                  <label>First Name *</label>
+                  <input
+                    type="text"
+                    value={newUser.firstName}
+                    onChange={(e) => setNewUser({...newUser, firstName: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="add-lastName">Last Name</label>
-                  <input type="text" id="add-lastName" name="lastName" value={newUser.lastName} onChange={handleInputChange} required />
+                  <label>Last Name *</label>
+                  <input
+                    type="text"
+                    value={newUser.lastName}
+                    onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="add-email">Email</label>
-                  <input type="email" id="add-email" name="email" value={newUser.email} onChange={handleInputChange} required />
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="add-phone">Phone</label>
-                  <input type="tel" id="add-phone" name="phone" value={newUser.phone} onChange={handleInputChange} required />
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={newUser.phone}
+                    onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="add-password">Password</label>
-                  <input type="password" id="add-password" name="password" value={newUser.password} onChange={handleInputChange} required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="add-confirmPassword">Confirm Password</label>
-                  <input type="password" id="add-confirmPassword" name="confirmPassword" value={newUser.confirmPassword} onChange={handleInputChange} required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="add-role">Role</label>
-                  <select id="add-role" name="role" value={newUser.role} onChange={handleInputChange} required>
-                    <option value="family">Family Member</option>
+                  <label>Role *</label>
+                  <select
+                    value={newUser.role}
+                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                    required
+                  >
+                    <option value="family">Family</option>
                     <option value="resident">Resident</option>
                     <option value="caregiver">Caregiver</option>
-                    <option value="healthcare">Healthcare Professional</option>
+                    <option value="healthcare">Healthcare</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
-                <div className="form-group checkbox-group full-width">
-                  <label htmlFor="add-isAdmin" className="checkbox-label">
+                <div className="form-group">
+                  <label>
                     <input
                       type="checkbox"
-                      id="add-isAdmin"
-                      name="isAdmin"
                       checked={newUser.isAdmin}
-                      onChange={handleInputChange}
-                      disabled={newUser.role !== "caregiver"} // Disable if role is not Caregiver
+                      onChange={(e) => setNewUser({...newUser, isAdmin: e.target.checked})}
+                      disabled={newUser.role !== 'caregiver'}
                     />
-                    <span>Grant Admin Privileges</span>
+                    Admin Privileges {newUser.role !== 'caregiver' && '(Only for Caregivers)'}
                   </label>
                 </div>
+                <div className="form-group">
+                  <label>Password *</label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Confirm Password *</label>
+                  <input
+                    type="password"
+                    value={newUser.confirmPassword}
+                    onChange={(e) => setNewUser({...newUser, confirmPassword: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
-              {/* Display error inside modal if needed */}
-              {error && <p className="error-message" style={{ marginTop: '1rem' }}>{error}</p>}
               <div className="modal-footer">
-                <button type="button" className="btn secondary-btn" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="btn primary-btn">Add User</button>
+                <button 
+                  type="button" 
+                  className="btn secondary-btn"
+                  onClick={() => {
+                    setShowAddModal(false)
+                    resetNewUserForm()
+                    setError("")
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn primary-btn">
+                  Add User
+                </button>
               </div>
             </form>
           </div>
@@ -365,59 +399,95 @@ function UsersManagement() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Edit User: {editingUser.firstName} {editingUser.lastName}</h3>
-              <button className="close-btn" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>×</button>
+              <h3>Edit User</h3>
+              <button 
+                className="close-btn" 
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditingUser(null)
+                  setError("")
+                }}
+              >
+                ×
+              </button>
             </div>
-            <form onSubmit={handleUpdateUser}>
+            <form onSubmit={handleEditUser}>
               <div className="form-grid">
-                {/* Input fields pre-filled with editingUser data */}
                 <div className="form-group">
-                  <label htmlFor="edit-firstName">First Name</label>
-                  <input type="text" id="edit-firstName" name="firstName" value={editingUser.firstName} onChange={handleEditInputChange} required />
+                  <label>First Name *</label>
+                  <input
+                    type="text"
+                    value={editingUser.firstName}
+                    onChange={(e) => setEditingUser({...editingUser, firstName: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-lastName">Last Name</label>
-                  <input type="text" id="edit-lastName" name="lastName" value={editingUser.lastName} onChange={handleEditInputChange} required />
+                  <label>Last Name *</label>
+                  <input
+                    type="text"
+                    value={editingUser.lastName}
+                    onChange={(e) => setEditingUser({...editingUser, lastName: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-email">Email</label>
-                  <input type="email" id="edit-email" name="email" value={editingUser.email} onChange={handleEditInputChange} required />
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                    required
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-phone">Phone</label>
-                  <input type="tel" id="edit-phone" name="phone" value={editingUser.phone} onChange={handleEditInputChange} required />
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
+                  />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="edit-role">Role</label>
-                  <select id="edit-role" name="role" value={editingUser.role} onChange={handleEditInputChange} required>
-                    <option value="family">Family Member</option>
+                  <label>Role *</label>
+                  <select
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                    required
+                  >
+                    <option value="family">Family</option>
                     <option value="resident">Resident</option>
                     <option value="caregiver">Caregiver</option>
-                    <option value="healthcare">Healthcare Professional</option>
+                    <option value="healthcare">Healthcare</option>
                     <option value="other">Other</option>
-                 </select>
+                  </select>
                 </div>
-                <div className="form-group checkbox-group full-width">
-                  <label htmlFor="edit-isAdmin" className="checkbox-label">
+                <div className="form-group">
+                  <label>
                     <input
                       type="checkbox"
-                      id="edit-isAdmin"
-                      name="isAdmin"
                       checked={editingUser.isAdmin}
-                      onChange={handleEditInputChange}
-                      disabled={editingUser.role !== "caregiver"} // Disable if role is not Caregiver
+                      onChange={(e) => setEditingUser({...editingUser, isAdmin: e.target.checked})}
+                      disabled={editingUser.role !== 'caregiver'}
                     />
-                    <span>Grant Admin Privileges</span>
+                    Admin Privileges {editingUser.role !== 'caregiver' && '(Only for Caregivers)'}
                   </label>
                 </div>
-                {/* Note: Password update is often handled separately for security */}
-                <p style={{ gridColumn: '1 / -1', fontSize: '0.8rem', color: '#6b7280' }}>Password cannot be changed here.</p>
               </div>
-              {/* Display error inside modal if needed */}
-              {error && <p className="error-message" style={{ marginTop: '1rem' }}>{error}</p>}
               <div className="modal-footer">
-                <button type="button" className="btn secondary-btn" onClick={() => { setShowEditModal(false); setEditingUser(null); }}>Cancel</button>
-                <button type="submit" className="btn primary-btn">Save Changes</button>
+                <button 
+                  type="button" 
+                  className="btn secondary-btn"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingUser(null)
+                    setError("")
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn primary-btn">
+                  Update User
+                </button>
               </div>
             </form>
           </div>

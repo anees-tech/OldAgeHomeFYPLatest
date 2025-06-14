@@ -1,134 +1,165 @@
 const express = require("express");
 const router = express.Router();
+const Activity = require("../models/Activity"); // Ensure Activity model is imported
+const User = require("../models/User");
 
-// In-memory storage for demo
-let activities = [
-  {
-    _id: "1",
-    title: "Morning Yoga",
-    description: "Gentle yoga session to start the day",
-    date: new Date("2024-12-20"),
-    time: "08:00",
-    location: "Activity Room A",
-    category: "Exercise & Fitness",
-    maxParticipants: 15,
-    isActive: true,
-    createdAt: new Date(),
-  },
-  {
-    _id: "2",
-    title: "Arts & Crafts",
-    description: "Creative crafting session with various materials",
-    date: new Date("2024-12-21"),
-    time: "14:00",
-    location: "Craft Room",
-    category: "Arts & Crafts",
-    maxParticipants: 12,
-    isActive: true,
-    createdAt: new Date(),
-  },
-];
-
-// Get all activities
+// Get all activities - UPDATED TO USE MONGODB
 router.get("/", async (req, res) => {
   try {
-    const { category, upcoming, active } = req.query;
-    let filteredActivities = [...activities];
+    // Query parameters for filtering (optional)
+    const { type, upcoming, active, day } = req.query;
+    let query = {};
 
-    if (category && category !== 'all') {
-      filteredActivities = filteredActivities.filter(activity => activity.category === category);
+    if (type && type !== 'all') {
+      query.type = type; // Model uses 'type'
+    }
+    if (day && day !== 'all') {
+      query.day = day;
     }
 
+    // Handle 'upcoming' based on current date
     if (upcoming === 'true') {
-      filteredActivities = filteredActivities.filter(activity => new Date(activity.date) >= new Date());
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today
+      query.date = { $gte: today.toISOString().split('T')[0] }; // Compare with date string
     }
 
-    if (active !== undefined) {
-      filteredActivities = filteredActivities.filter(activity => activity.isActive === (active === 'true'));
-    }
+    // Handle 'active' status (if your model had an 'isActive' field)
+    // if (active !== undefined && Activity.schema.paths.isActive) {
+    //   query.isActive = (active === 'true');
+    // }
 
-    // Sort by date
-    filteredActivities.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    res.json(filteredActivities);
+    const activities = await Activity.find(query).sort({ date: 1, time: 1 });
+    res.json(activities);
   } catch (err) {
     console.error("Activities fetch error:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Add new activity
+// Add new activity - UPDATED TO USE MONGODB
 router.post("/", async (req, res) => {
   try {
-    const { title, description, date, time, location, category, maxParticipants, isActive = true } = req.body;
+    const { 
+      title, 
+      description, 
+      type, // Changed from category
+      date, 
+      time, 
+      duration, // Added
+      capacity, // Changed from maxParticipants
+      location, 
+      day,      // Added
+      isActive // Frontend sends this, model doesn't have it by default
+    } = req.body;
 
-    if (!title || !date || !time || !location || !category) {
-      return res.status(400).json({ message: "All required fields must be provided" });
+    // Validation based on the Activity model requirements
+    if (!title || !description || !type || !date || !time || !duration || !capacity || !location || !day) {
+      let missingFields = [];
+      if (!title) missingFields.push("title");
+      if (!description) missingFields.push("description");
+      if (!type) missingFields.push("type");
+      if (!date) missingFields.push("date");
+      if (!time) missingFields.push("time");
+      if (!duration) missingFields.push("duration");
+      if (!capacity) missingFields.push("capacity");
+      if (!location) missingFields.push("location");
+      if (!day) missingFields.push("day");
+      
+      return res.status(400).json({ message: `Missing required fields: ${missingFields.join(', ')}` });
     }
 
-    const newActivity = {
-      _id: Date.now().toString(),
+    const newActivity = new Activity({
       title,
-      description: description || "",
-      date: new Date(date),
+      description,
+      type,
+      date,
       time,
+      duration: parseInt(duration),
+      capacity: parseInt(capacity),
       location,
-      category,
-      maxParticipants: maxParticipants || 0,
-      isActive,
-      createdAt: new Date(),
-    };
+      day,
+      participants: 0, // Default value from model
+      // If you add isActive to your Activity model, you can include it here:
+      // isActive: isActive !== undefined ? isActive : true, 
+    });
 
-    activities.push(newActivity);
-    res.status(201).json({ message: "Activity added successfully", activity: newActivity });
+    const savedActivity = await newActivity.save();
+    res.status(201).json(savedActivity); // Return the created activity object
   } catch (err) {
-    console.error("Activity add error:", err);
+    console.error("Activity add error:", err.message, err.stack);
+    if (err.name === 'ValidationError') {
+        let errors = {};
+        Object.keys(err.errors).forEach((key) => {
+            errors[key] = err.errors[key].message;
+        });
+        return res.status(400).json({ message: "Validation Error", errors });
+    }
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Update activity
+// Update activity - TODO: Update this to use MongoDB and correct fields
 router.put("/:id", async (req, res) => {
   try {
-    const activityIndex = activities.findIndex(activity => activity._id === req.params.id);
-    if (activityIndex === -1) {
+    // This needs to be updated to use Activity.findByIdAndUpdate
+    // and expect the correct fields (type, capacity, duration, day)
+    // For now, returning a placeholder to avoid breaking if called
+    const activity = await Activity.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+    if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
     }
-
-    const { title, description, date, time, location, category, maxParticipants, isActive } = req.body;
-    
-    activities[activityIndex] = {
-      ...activities[activityIndex],
-      title: title || activities[activityIndex].title,
-      description: description !== undefined ? description : activities[activityIndex].description,
-      date: date ? new Date(date) : activities[activityIndex].date,
-      time: time || activities[activityIndex].time,
-      location: location || activities[activityIndex].location,
-      category: category || activities[activityIndex].category,
-      maxParticipants: maxParticipants !== undefined ? maxParticipants : activities[activityIndex].maxParticipants,
-      isActive: isActive !== undefined ? isActive : activities[activityIndex].isActive,
-      updatedAt: new Date(),
-    };
-
-    res.json({ message: "Activity updated successfully", activity: activities[activityIndex] });
+    res.json(activity);
   } catch (err) {
     console.error("Activity update error:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Delete activity
+// Delete activity - TODO: Update this to use MongoDB
 router.delete("/:id", async (req, res) => {
   try {
-    const activityIndex = activities.findIndex(activity => activity._id === req.params.id);
-    if (activityIndex === -1) {
+    // This needs to be updated to use Activity.findByIdAndDelete
+    const activity = await Activity.findByIdAndDelete(req.params.id);
+    if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
     }
-
-    activities.splice(activityIndex, 1);
     res.json({ message: "Activity deleted successfully" });
   } catch (err) {
     console.error("Activity delete error:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Get dashboard statistics - This route already uses Mongoose models
+router.get("/stats/overview", async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalResidents = await User.countDocuments({ role: 'resident' });
+    const totalCaregivers = await User.countDocuments({ role: 'caregiver' });
+    const totalActivities = await Activity.countDocuments();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    const upcomingActivities = await Activity.find({ 
+      date: { $gte: today.toISOString().split('T')[0] }, // Compare with date string
+      // isActive: true // Add this if your Activity model has an isActive field
+    })
+      .sort({ date: 1, time: 1 })
+      .limit(5)
+      .lean();
+
+    res.json({
+      totalUsers,
+      totalResidents,
+      totalCaregivers,
+      totalActivities,
+      upcomingActivities,
+    });
+  } catch (err) {
+    console.error("Error fetching dashboard stats:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });

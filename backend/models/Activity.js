@@ -14,8 +14,9 @@ const ActivitySchema = new mongoose.Schema(
     duration: { type: Number, required: true },
     capacity: { type: Number, required: true },
     location: { type: String, required: true },
-    day: { type: String, required: true }, //change 6
+    day: { type: String, required: true },
     participants: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 )

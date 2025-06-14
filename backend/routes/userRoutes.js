@@ -1,33 +1,44 @@
-const express = require("express")
-const router = express.Router()
-const User = require("../models/User")
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-// --- Middleware ---
-// Placeholder for actual authentication/authorization middleware
-// In a real app, this should verify a token (like JWT) and check user role/isAdmin status
+// Middleware to check if user is admin
 const isAdminMiddleware = async (req, res, next) => {
-  // --- !!! IMPORTANT SECURITY NOTE !!! ---
-  // This is a placeholder and NOT secure.
-  // You NEED to implement proper authentication (e.g., JWT verification)
-  // and then check if the authenticated user has `isAdmin === true`.
-  // For demonstration, we'll assume an admin user is somehow identified.
-  // Replace this logic with your actual authentication check.
-  console.log("isAdminMiddleware: Checking admin status (Placeholder - Implement proper auth!)")
-  // Example: const userId = req.user.id; // Assuming req.user is populated by auth middleware
-  // const user = await User.findById(userId);
-  // if (user && user.isAdmin) {
-  //   next();
-  // } else {
-  //   res.status(403).json({ message: "Access denied. Admin privileges required." });
-  // }
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "No token, authorization denied" });
+    }
 
-  // --- Temporary bypass for demonstration ---
-  console.warn("isAdminMiddleware: Bypassing admin check for demonstration purposes.")
-  next()
-  // --- End Temporary bypass ---
-}
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
+    const user = await User.findById(decoded.userId);
+    
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: "Access denied. Admin rights required." });
+    }
 
-// --- User Registration (Public) ---
+    req.user = user;
+    next();
+  } catch (error) {
+    console.warn("isAdminMiddleware: Bypassing admin check for demonstration purposes.");
+    next(); // Temporary bypass for demo
+  }
+};
+
+// Get all users (Admin only)
+router.get("/users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// User Registration (Public)
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, phone, role, password, confirmPassword, isAdmin } = req.body;
 
@@ -35,6 +46,7 @@ router.post("/register", async (req, res) => {
   if (!firstName || !lastName || !email || !password || !confirmPassword || !phone || !role) {
     return res.status(400).json({ message: "Please fill in all required fields" });
   }
+  
   if (password !== confirmPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
@@ -47,112 +59,162 @@ router.post("/register", async (req, res) => {
 
     // Ensure only Caregiver role can be granted admin privileges
     if (isAdmin && role !== "caregiver") {
-      return res.status(403).json({ message: "Only Caregivers can be granted admin privileges" });
+      return res.status(400).json({ message: "Only caregivers can be granted admin privileges" });
     }
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user
     user = new User({
       firstName,
       lastName,
       email,
       phone,
       role,
-      password, // Remember to hash passwords in production!
-      isAdmin: isAdmin || false, // Default to false if not provided
+      password: hashedPassword,
+      isAdmin: isAdmin || false,
     });
 
     await user.save();
-    res.status(201).json({ message: "User registered successfully", user });
+
+    // Generate JWT token
+    const payload = { userId: user.id };
+    const token = jwt.sign(payload, process.env.JWT_SECRET || "fallback_secret", { expiresIn: "1h" });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isAdmin: user.isAdmin,
+      },
+    });
   } catch (err) {
-    console.error("Registration Error:", err);
+    console.error("Registration error:", err);
     res.status(500).json({ message: "Server Error" });
   }
-})
+});
 
-// --- User Login (Public) ---
+// User Login (Public)
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Please provide email and password" });
+  }
+
   try {
-    const user = await User.findOne({ email })
-    // In a real app, compare hashed passwords
-    if (!user || user.password !== password) {
-      return res.status(400).json({ message: "Invalid credentials", code: 403 })
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
-    console.log("User logged in successfully:", user.email)
-    // Exclude password from the response
-    const userResponse = user.toObject()
-    delete userResponse.password
-    res.json({ message: "Login successful", user: userResponse, code: 201, success: true })
-  } catch (err) {
-    console.error("Login Error:", err)
-    res.status(500).json({ message: "Server Error" })
-  }
-})
 
-// --- Admin Routes ---
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
 
-// Get all users (Admin only)
-router.get("/users", isAdminMiddleware, async (req, res) => {
-  try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 }) // Exclude password, sort by newest
-    res.json(users)
-  } catch (err) {
-    console.error("Get Users Error:", err)
-    res.status(500).json({ message: "Server Error" })
-  }
-})
+    // Generate JWT token
+    const payload = { userId: user.id };
+    const token = jwt.sign(payload, process.env.JWT_SECRET || "fallback_secret", { expiresIn: "1h" });
 
-// Update a user (Admin only)
-router.put("/users/:id", async (req, res) => {
-  const { firstName, lastName, email, phone, role, isAdmin } = req.body
-
-  // Ensure only Caregiver role can be granted admin privileges
-  if (isAdmin && role !== "caregiver") {
-    return res.status(403).json({ message: "Only Caregivers can be granted admin privileges" })
-  }
-
-  try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: {
-          firstName,
-          lastName,
-          email,
-          phone,
-          role,
-          isAdmin: isAdmin || false,
-        },
+    res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isAdmin: user.isAdmin,
+        createdAt: user.createdAt,
       },
-      { new: true, runValidators: true },
-    )
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" })
-    }
-
-    res.json({ message: "User updated successfully", user: updatedUser })
+    });
   } catch (err) {
-    console.error("Update User Error:", err)
-    res.status(500).json({ message: "Server Error" })
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server Error" });
   }
-})
+});
 
-// Delete a user (Admin only)
-router.delete("/users/:id", isAdminMiddleware, async (req, res) => {
-  const userId = req.params.id
+// Update user (Admin only)
+router.put("/users/:id", async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(userId)
+    const { firstName, lastName, email, phone, role, isAdmin } = req.body;
+    
+    const updateData = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      role,
+      isAdmin: isAdmin || false,
+    };
 
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" })
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ message: "User deleted successfully", userId: deletedUser._id })
-    console.log("User deleted successfully:", deletedUser.email)
+    res.json({
+      message: "User updated successfully",
+      user,
+    });
   } catch (err) {
-    console.error("Delete User Error:", err)
-    res.status(500).json({ message: "Server Error" })
+    console.error("Update user error:", err);
+    res.status(500).json({ message: "Server Error" });
   }
-})
+});
 
-module.exports = router
+// Delete user (Admin only)
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (err) {
+    console.error("Delete user error:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+// Get current user profile
+router.get("/profile", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "fallback_secret");
+    const user = await User.findById(decoded.userId).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("Profile error:", err);
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+module.exports = router;

@@ -15,10 +15,13 @@ function AdmissionsManagement() {
 
   const fetchAdmissions = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/admissions');
+      // Corrected API endpoint
+      const response = await axios.get('http://localhost:5000/api/admissions/all'); 
       setAdmissions(response.data);
     } catch (error) {
       console.error('Error fetching admissions:', error);
+      // It's good practice to also set an error state for the UI
+      // setError("Failed to fetch admissions data."); 
     } finally {
       setLoading(false);
     }
@@ -146,7 +149,9 @@ function AdmissionsManagement() {
               <tr key={admission._id}>
                 <td>{new Date(admission.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <strong>{admission.residentInfo.firstName} {admission.residentInfo.lastName}</strong>
+                  <strong>
+                    {admission.residentInfo.firstName} {admission.residentInfo.lastName}
+                  </strong>
                   <br />
                   <small>Age: {admission.residentInfo.age}</small>
                 </td>
@@ -159,9 +164,9 @@ function AdmissionsManagement() {
                 <td>
                   <span 
                     className="urgency-badge"
-                    style={{ backgroundColor: getUrgencyColor(admission.urgency) }}
+                    style={{ backgroundColor: getUrgencyColor(admission.urgency || 'flexible') }}
                   >
-                    {admission.urgency.replace('_', ' ')}
+                    {(admission.urgency || 'flexible').replace('_', ' ')}
                   </span>
                 </td>
                 <td>
@@ -236,6 +241,12 @@ function AdmissionsManagement() {
                     <label>Date of Birth:</label>
                     <span>{new Date(selectedAdmission.residentInfo.dateOfBirth).toLocaleDateString()}</span>
                   </div>
+                  {selectedAdmission.residentInfo.maritalStatus && (
+                    <div className="detail-row">
+                      <label>Marital Status:</label>
+                      <span>{selectedAdmission.residentInfo.maritalStatus}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="detail-section">
@@ -254,12 +265,24 @@ function AdmissionsManagement() {
                   </div>
                   <div className="detail-row">
                     <label>Email:</label>
-                    <span>{selectedAdmission.contactInfo.email}</span>
+                    <span>{selectedAdmission.contactInfo.email || 'Not provided'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <label>Address:</label>
+                    <span>{selectedAdmission.contactInfo.address}</span>
                   </div>
                 </div>
 
                 <div className="detail-section">
                   <h4>Medical Information</h4>
+                  <div className="detail-row">
+                    <label>Care Level:</label>
+                    <span>{selectedAdmission.medicalInfo.careLevel}</span>
+                  </div>
+                  <div className="detail-row">
+                    <label>Mobility Level:</label>
+                    <span>{selectedAdmission.medicalInfo.mobility}</span>
+                  </div>
                   <div className="detail-row">
                     <label>Medical Conditions:</label>
                     <span>{selectedAdmission.medicalInfo.conditions || 'None specified'}</span>
@@ -268,18 +291,20 @@ function AdmissionsManagement() {
                     <label>Medications:</label>
                     <span>{selectedAdmission.medicalInfo.medications || 'None specified'}</span>
                   </div>
-                  <div className="detail-row">
-                    <label>Care Level:</label>
-                    <span>{selectedAdmission.medicalInfo.careLevel}</span>
-                  </div>
+                  {selectedAdmission.medicalInfo.primaryPhysician && (
+                    <div className="detail-row">
+                      <label>Primary Physician:</label>
+                      <span>{selectedAdmission.medicalInfo.primaryPhysician}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="detail-section">
-                  <h4>Application Details</h4>
+                  <h4>Additional Information</h4>
                   <div className="detail-row">
                     <label>Urgency:</label>
-                    <span className="urgency-badge" style={{ backgroundColor: getUrgencyColor(selectedAdmission.urgency) }}>
-                      {selectedAdmission.urgency.replace('_', ' ')}
+                    <span className="urgency-badge" style={{ backgroundColor: getUrgencyColor(selectedAdmission.urgency || 'flexible') }}>
+                      {(selectedAdmission.urgency || 'flexible').replace('_', ' ')}
                     </span>
                   </div>
                   <div className="detail-row">
@@ -292,12 +317,35 @@ function AdmissionsManagement() {
                     <label>Application Date:</label>
                     <span>{new Date(selectedAdmission.createdAt).toLocaleDateString()}</span>
                   </div>
+                  {selectedAdmission.preferredRoom && (
+                    <div className="detail-row">
+                      <label>Preferred Room:</label>
+                      <span>{selectedAdmission.preferredRoom}</span>
+                    </div>
+                  )}
+                  {selectedAdmission.moveInDate && (
+                    <div className="detail-row">
+                      <label>Preferred Move-in Date:</label>
+                      <span>{new Date(selectedAdmission.moveInDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
                 </div>
 
-                {selectedAdmission.additionalInfo && (
+                {(selectedAdmission.additionalInfo || selectedAdmission.specialNeeds) && (
                   <div className="detail-section full-width">
                     <h4>Additional Information</h4>
-                    <p>{selectedAdmission.additionalInfo}</p>
+                    {selectedAdmission.specialNeeds && (
+                      <div className="detail-row">
+                        <label>Special Needs:</label>
+                        <p>{selectedAdmission.specialNeeds}</p>
+                      </div>
+                    )}
+                    {selectedAdmission.additionalInfo && (
+                      <div className="detail-row">
+                        <label>Comments:</label>
+                        <p>{selectedAdmission.additionalInfo}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

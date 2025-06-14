@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-// import '../../styles/admin-management.css';
+// import '../../styles/admin-management.css'; // Assuming this holds common styles
+import '../../styles/donations-management.css'; // Create this file for specific styles
 
 function DonationsManagement() {
   const [donations, setDonations] = useState([]);
@@ -21,9 +22,11 @@ function DonationsManagement() {
   }, []);
 
   const fetchDonations = async () => {
+    setLoading(true); // Set loading true at the start of fetch
     try {
       const response = await axios.get('http://localhost:5000/api/donations/all');
       setDonations(response.data);
+      setError(''); // Clear previous errors
     } catch (err) {
       setError('Failed to fetch donations');
       console.error('Error fetching donations:', err);
@@ -38,6 +41,7 @@ function DonationsManagement() {
       setStats(response.data);
     } catch (err) {
       console.error('Error fetching donation stats:', err);
+      // Optionally set an error state for stats if needed
     }
   };
 
@@ -45,15 +49,15 @@ function DonationsManagement() {
     try {
       const response = await axios.put(`http://localhost:5000/api/donations/${id}`, {
         status,
-        adminNotes
+        adminNotes // Though not used in UI for input, backend might use it
       });
       
       setDonations(donations.map(donation => 
         donation._id === id ? response.data : donation
       ));
       
-      // Refresh stats
-      fetchStats();
+      fetchStats(); // Refresh stats after status update
+      setError(''); // Clear previous errors
     } catch (err) {
       setError('Failed to update donation status');
       console.error('Error updating donation:', err);
@@ -65,7 +69,8 @@ function DonationsManagement() {
       try {
         await axios.delete(`http://localhost:5000/api/donations/${id}`);
         setDonations(donations.filter(donation => donation._id !== id));
-        fetchStats();
+        fetchStats(); // Refresh stats after deletion
+        setError(''); // Clear previous errors
       } catch (err) {
         setError('Failed to delete donation');
         console.error('Error deleting donation:', err);
@@ -74,9 +79,23 @@ function DonationsManagement() {
   };
 
   const filteredDonations = donations.filter(donation => {
-    const matchesSearch = 
-      donation.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      donation.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // Safely access nested properties
+    const donorFirstName = donation.donorInfo?.firstName?.toLowerCase() || '';
+    const donorLastName = donation.donorInfo?.lastName?.toLowerCase() || '';
+    const donorEmail = donation.donorInfo?.email?.toLowerCase() || '';
+    const isAnonymous = donation.donorInfo?.isAnonymous || false;
+
+    let matchesSearch = false;
+    if (isAnonymous && "anonymous".includes(searchTermLower)) {
+        matchesSearch = true;
+    } else if (!isAnonymous) {
+        matchesSearch = 
+            donorFirstName.includes(searchTermLower) ||
+            donorLastName.includes(searchTermLower) ||
+            donorEmail.includes(searchTermLower);
+    }
     
     const matchesStatus = filterStatus === 'all' || donation.status === filterStatus;
     const matchesCategory = filterCategory === 'all' || donation.category === filterCategory;
@@ -90,18 +109,20 @@ function DonationsManagement() {
       case 'pending': return 'status-pending';
       case 'failed': return 'status-failed';
       case 'refunded': return 'status-refunded';
-      default: return 'status-pending';
+      default: return 'status-default'; // Default class
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString();
   };
 
   const formatAmount = (amount) => {
+    if (typeof amount !== 'number') return 'N/A'; // Handle cases where amount might not be a number
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD' // Consider making currency dynamic if needed
     }).format(amount);
   };
 
@@ -109,7 +130,7 @@ function DonationsManagement() {
 
   return (
     <div className="donations-management">
-      <div className="donations-header">
+      <div className="management-header donations-header"> {/* Use common management-header */}
         <h2>Donations Management</h2>
         <div className="header-stats">
           <div className="stat-card">
@@ -128,17 +149,17 @@ function DonationsManagement() {
       </div>
 
       {/* Filters */}
-      <div className="donations-filters">
-        <div className="search-box">
+      <div className="filter-controls donations-filters"> {/* Use common filter-controls */}
+        <div className="search-bar"> {/* Use common search-bar */}
           <input
             type="text"
-            placeholder="Search donations..."
+            placeholder="Search by name, email, or 'anonymous'..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
         </div>
-        <div className="filter-box">
+        <div className="filter-select-group"> {/* Use common filter-select-group */}
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -151,7 +172,7 @@ function DonationsManagement() {
             <option value="refunded">Refunded</option>
           </select>
         </div>
-        <div className="filter-box">
+        <div className="filter-select-group"> {/* Use common filter-select-group */}
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
@@ -163,6 +184,9 @@ function DonationsManagement() {
             <option value="activities">Activities</option>
             <option value="facilities">Facilities</option>
             <option value="emergency">Emergency</option>
+            <option value="meals">Meals & Nutrition</option>
+            <option value="transportation">Transportation</option>
+            {/* Add other categories from your backend options if needed */}
           </select>
         </div>
       </div>
@@ -170,14 +194,14 @@ function DonationsManagement() {
       {error && <div className="error-message">{error}</div>}
 
       {/* Donations Table */}
-      <div className="donations-table-container">
-        <table className="donations-table">
+      <div className="table-container donations-table-container"> {/* Use common table-container */}
+        <table className="data-table donations-table"> {/* Use common data-table */}
           <thead>
             <tr>
               <th>Donor</th>
               <th>Email</th>
               <th>Amount</th>
-              <th>Type</th>
+              <th>Type (Recurrence)</th>
               <th>Category</th>
               <th>Status</th>
               <th>Date</th>
@@ -196,29 +220,33 @@ function DonationsManagement() {
                 <tr key={donation._id}>
                   <td>
                     <div className="donor-info">
-                      <strong>{donation.isAnonymous ? 'Anonymous' : donation.donorName}</strong>
-                      {donation.donationType === 'monthly' && (
+                      <strong>
+                        {donation.donorInfo?.isAnonymous 
+                          ? 'Anonymous' 
+                          : `${donation.donorInfo?.firstName || ''} ${donation.donorInfo?.lastName || ''}`.trim() || 'N/A'}
+                      </strong>
+                      {donation.donationType === 'monthly' && ( // donationType here is recurrence
                         <span className="recurring-badge">Monthly</span>
                       )}
                     </div>
                   </td>
-                  <td>{donation.isAnonymous ? 'Hidden' : donation.email}</td>
+                  <td>{donation.donorInfo?.isAnonymous ? 'Hidden' : donation.donorInfo?.email || 'N/A'}</td>
                   <td className="amount-cell">
-                    <strong>{formatAmount(donation.amount)}</strong>
+                    <strong>{donation.type === 'monetary' ? formatAmount(donation.amount) : donation.type.toUpperCase()}</strong>
                   </td>
                   <td>
                     <span className="type-badge">
-                      {donation.donationType.replace('-', ' ').toUpperCase()}
+                      {donation.donationType ? donation.donationType.replace('-', ' ') : 'N/A'} {/* Recurrence */}
                     </span>
                   </td>
                   <td>
                     <span className="category-badge">
-                      {donation.category.toUpperCase()}
+                      {donation.category ? donation.category : 'N/A'}
                     </span>
                   </td>
                   <td>
                     <span className={`status-badge ${getStatusBadgeClass(donation.status)}`}>
-                      {donation.status.toUpperCase()}
+                      {donation.status ? donation.status : 'N/A'}
                     </span>
                   </td>
                   <td>{formatDate(donation.createdAt)}</td>
@@ -227,7 +255,8 @@ function DonationsManagement() {
                       <select
                         value={donation.status}
                         onChange={(e) => updateDonationStatus(donation._id, e.target.value)}
-                        className="status-select"
+                        className="status-select" // From admin.css or specific
+                        title="Update Status"
                       >
                         <option value="pending">Pending</option>
                         <option value="completed">Completed</option>
@@ -235,11 +264,12 @@ function DonationsManagement() {
                         <option value="refunded">Refunded</option>
                       </select>
                       <button
-                        className="action-btn delete-btn"
+                        className="btn delete-btn" // From admin.css
                         onClick={() => deleteDonation(donation._id)}
                         title="Delete Donation"
                       >
-                        Delete
+                        {/* Using React Icons would be <FaTrashAlt /> */}
+                        Delete 
                       </button>
                     </div>
                   </td>

@@ -10,12 +10,14 @@ function GalleryManagement() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    category: '', // Initialize as empty or a valid default lowercase category
     imageUrl: '',
     isActive: true
   });
 
-  const categories = [
+  // This array is used for display in the dropdown.
+  // Ensure it matches the categories you want to support.
+  const categoriesForDisplay = [
     'Activities',
     'Facilities',
     'Events',
@@ -25,7 +27,8 @@ function GalleryManagement() {
     'Recreation',
     'Healthcare',
     'Celebrations',
-    'General'
+    'General',
+    'Other' // Added 'Other' to match model
   ];
 
   useEffect(() => {
@@ -75,13 +78,13 @@ function GalleryManagement() {
     setFormData({
       title: image.title,
       description: image.description,
-      category: image.category,
+      category: image.category, // Assuming image.category from DB is already lowercase
       imageUrl: image.imageUrl,
       isActive: image.isActive
     });
     setShowAddModal(true);
   };
-
+  
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this image?')) {
       try {
@@ -109,7 +112,7 @@ function GalleryManagement() {
     setFormData({
       title: '',
       description: '',
-      category: '',
+      category: '', // Reset to empty or a default lowercase category
       imageUrl: '',
       isActive: true
     });
@@ -120,11 +123,11 @@ function GalleryManagement() {
   }
 
   return (
-    <div className="gallery-management">
-      <div className="management-header">
+    <div className="gallery-management-container"> {/* Changed class for main container */}
+      <div className="gallery-header"> {/* Changed class */}
         <h2>Gallery Management</h2>
         <button 
-          className="btn primary-btn"
+          className="btn primary-btn add-image-btn" // Added specific class
           onClick={() => {
             resetForm();
             setEditingImage(null);
@@ -145,7 +148,7 @@ function GalleryManagement() {
           <p>Active Images</p>
         </div>
         <div className="stat-card">
-          <h3>{categories.length}</h3>
+          <h3>{categoriesForDisplay.length}</h3>
           <p>Categories</p>
         </div>
       </div>
@@ -190,11 +193,12 @@ function GalleryManagement() {
       {/* Add/Edit Modal */}
       {showAddModal && (
         <div className="modal-overlay">
-          <div className="modal">
+          {/* Use modal-content and gallery-modal for better CSS targeting */}
+          <div className="modal-content gallery-modal"> 
             <div className="modal-header">
               <h3>{editingImage ? 'Edit Image' : 'Add New Image'}</h3>
               <button 
-                className="modal-close"
+                className="close-btn" // Use 'close-btn' if styled in admin.css
                 onClick={() => {
                   setShowAddModal(false);
                   setEditingImage(null);
@@ -235,8 +239,9 @@ function GalleryManagement() {
                   required
                 >
                   <option value="">Select Category</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {/* Use categoriesForDisplay for labels, and lowercase for values */}
+                  {categoriesForDisplay.map(cat => (
+                    <option key={cat} value={cat.toLowerCase()}>{cat}</option>
                   ))}
                 </select>
               </div>

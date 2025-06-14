@@ -1,317 +1,267 @@
-.activities-tracker {
-  padding: 2rem;
+.activities-tracker-container, /* Keep if used as a wrapper */
+.activities-tracker { /* Main container class from JSX */
+  padding: 1rem;
 }
 
-.management-header {
+.management-header { /* Re-using class from admin.css or other components */
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .management-header h2 {
-  color: #2c3e50;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0;
 }
 
+.management-header .btn i { /* For icon in header button */
+  margin-right: 0.5rem;
+}
+
+/* Stats Cards Section */
 .activities-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+/* .stat-card styles are primarily from admin.css */
+.activities-stats .stat-card h3 {
+  font-size: 1.875rem; /* text-3xl */
+  color: #f59e0b; /* Accent color for numbers */
+}
+.activities-stats .stat-card p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: uppercase;
 }
 
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
+
+/* Search and Filter Controls */
+.activities-filters { /* Class used in JSX */
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.stat-card h3 {
-  font-size: 2rem;
-  color: #667eea;
-  margin: 0 0 0.5rem 0;
+.activities-filters .search-box,
+.activities-filters .filter-box {
+  flex-grow: 1;
+  min-width: 200px;
 }
 
-.stat-card p {
-  color: #666;
-  margin: 0;
-  font-weight: 500;
+.activities-filters .search-input,
+.activities-filters .filter-select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
 }
+.activities-filters .search-input:focus,
+.activities-filters .filter-select:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+/* Error message styling is from admin.css */
 
 .activities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
 .activity-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .activity-card:hover {
-  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
 }
 
-.activity-card.inactive {
-  opacity: 0.6;
-}
-
-.activity-header {
+.activity-card .activity-header { /* More specific selector */
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
 }
 
-.activity-header h3 {
-  color: #2c3e50;
-  margin: 0;
-  font-size: 1.3rem;
-}
-
-.category-badge {
-  background: #667eea;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.activity-details p {
-  margin: 0.5rem 0;
-  color: #555;
-}
-
-.activity-details .description {
-  color: #666;
-  font-style: italic;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.activity-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.activity-actions .btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.edit-btn {
-  background: #667eea;
-  color: white;
-}
-
-.edit-btn:hover {
-  background: #5a6fd8;
-}
-
-.delete-btn {
-  background: #e74c3c;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #c0392b;
-}
-
-.status {
-  margin-left: auto;
+.activity-card .activity-header .activity-title { /* More specific selector */
+  font-size: 1.125rem; /* text-lg */
   font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.status.active {
-  color: #27ae60;
-}
-
-.status.inactive {
-  color: #e67e22;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
+  color: #1f2937;
   margin: 0;
-  color: #2c3e50;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1; /* Allow title to take space */
+  margin-right: 0.5rem; /* Space before badge */
 }
 
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
+.activity-card .activity-type { /* Class used in JSX for category badge */
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize; /* Ensure consistent capitalization */
+  white-space: nowrap;
+  color: white; /* Default, specific badges will override */
+}
+/* Specific badge colors based on category/type */
+.activity-card .badge-fitness { background-color: #10b981; /* Green */ }
+.activity-card .badge-creative { background-color: #8b5cf6; /* Violet */ }
+.activity-card .badge-therapy { background-color: #3b82f6; /* Blue */ }
+.activity-card .badge-social { background-color: #f59e0b; /* Orange */ }
+.activity-card .badge-health { background-color: #ec4899; /* Pink */ }
+.activity-card .badge-default { background-color: #6b7280; /* Gray for fallback */ }
+
+
+.activity-card .activity-description { /* More specific selector */
+  padding: 1.25rem; /* Add padding here instead of card-body if card-body is removed */
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: calc(1.6em * 3); /* Approx 3 lines height */
+  flex-grow: 1; /* Allow description to take available space */
 }
 
-.modal-form {
-  padding: 1.5rem;
-}
-
-.form-grid {
+.activity-card .activity-details { /* Class used in JSX */
+  padding: 0 1.25rem 1.25rem; /* Padding around details */
+  font-size: 0.875rem;
+  color: #374151;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(2, 1fr); /* Two columns for details */
+  gap: 0.5rem 1rem; /* Row and column gap */
 }
 
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #e1e8ed;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.checkbox-group {
+.activity-card .activity-detail { /* Class used in JSX */
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Stack label and value */
 }
 
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: auto;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid #eee;
-}
-
-.modal-actions .btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+.activity-card .detail-label { /* Class used in JSX */
   font-weight: 500;
+  color: #6b7280; /* Lighter gray */
+  font-size: 0.75rem; /* text-xs */
+  margin-bottom: 0.125rem;
 }
 
-.primary-btn {
-  background: #667eea;
-  color: white;
+.activity-card .detail-value { /* Class used in JSX */
+  font-weight: 500;
+  color: #374151;
 }
 
-.primary-btn:hover {
-  background: #5a6fd8;
+.activity-card .activity-actions { /* Class used in JSX */
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: auto; /* Push footer to bottom */
 }
 
-.secondary-btn {
-  background: #f8f9fa;
-  color: #666;
-  border: 1px solid #dee2e6;
+.activity-card .activity-actions .btn {
+  /* Uses .edit-btn, .delete-btn from admin.css */
+  padding: 0.5rem 1rem; /* Standard padding for buttons with text */
+}
+.activity-card .activity-actions .btn i { /* For Font Awesome icons */
+  margin-right: 0.375rem;
 }
 
-.secondary-btn:hover {
-  background: #e9ecef;
-}
-
-.loading {
+.activity-card .activity-status { /* Class used in JSX for Active/Inactive status */
+  padding: 0.5rem 1.25rem;
   text-align: center;
-  padding: 3rem;
-  font-size: 1.2rem;
-  color: #666;
+  font-weight: 500;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border-top: 1px solid #e5e7eb;
+}
+.activity-card .activity-status.active {
+  background-color: #d1fae5; /* Light green */
+  color: #047857; /* Dark green */
+}
+.activity-card .activity-status.inactive {
+  background-color: #fee2e2; /* Light red */
+  color: #b91c1c; /* Dark red */
 }
 
-@media (max-width: 768px) {
-  .activities-tracker {
-    padding: 1rem;
-  }
-  
-  .management-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .activities-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal {
-    width: 95%;
-    margin: 1rem;
-  }
-  
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+
+/* Empty state for no activities */
+.activities-grid .no-results { /* Target .no-results when it's a child of .activities-grid */
+  grid-column: 1 / -1; /* Make it span all columns */
+  text-align: center;
+  padding: 2rem;
+}
+.empty-state { /* Class used in JSX */
+  background-color: #f9fafb;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  display: inline-block; /* To center it if .no-results is text-align: center */
+  max-width: 400px; /* Optional: constrain width */
+  margin: 0 auto; /* Center if it's a block */
+}
+.empty-state i { /* For Font Awesome icon */
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #f59e0b; /* Accent color */
+}
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+.empty-state .btn {
+  /* Uses .primary-btn from admin.css */
+}
+
+
+/* Activity Form specific styles (within modal) */
+/* .modal-overlay, .modal-content, .modal-header, .modal-footer, .close-btn from admin.css */
+.activity-modal .modal-content { /* If you need specific overrides for this modal */
+  max-width: 650px;
+}
+
+.activity-modal .form-grid {
+  /* Uses .form-grid from admin.css */
+}
+
+.activity-modal .form-group textarea {
+  min-height: 100px;
+}
+
+.activity-modal .form-group label input[type="checkbox"] { /* Style for checkbox within label */
+    margin-right: 0.5rem;
+    vertical-align: middle;
+    width: auto;
+    accent-color: #f59e0b;
+}
+.activity-modal .form-group label { /* Ensure label text is aligned with checkbox */
+    display: flex;
+    align-items: center;
 }

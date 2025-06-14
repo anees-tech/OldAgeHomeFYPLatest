@@ -92,13 +92,15 @@ const emailTemplates = {
         </div>
         <div style="background: white; padding: 30px; border: 1px solid #e1e8ed; border-radius: 0 0 10px 10px;">
           <h2 style="color: #2c3e50; margin-top: 0;">Dear ${name},</h2>
-          <p style="color: #555; line-height: 1.6;">Thank you for your generous ${donationType} donation of <strong>$${amount}</strong>.</p>
+          <p style="color: #555; line-height: 1.6;">Thank you for your generous ${donationType} ${typeof amount === 'number' ? `donation of <strong>$${amount}</strong>` : 'contribution'}.</p>
+          ${typeof amount === 'number' ? `
           <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f39c12;">
             <h3 style="color: #f39c12; margin-top: 0;">Donation Details:</h3>
             <p style="margin: 5px 0; color: #555;"><strong>Amount:</strong> $${amount}</p>
             <p style="margin: 5px 0; color: #555;"><strong>Type:</strong> ${donationType}</p>
             <p style="margin: 5px 0; color: #555;"><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
           </div>
+          ` : ''}
           <p style="color: #555; line-height: 1.6;">Your contribution helps us provide:</p>
           <ul style="color: #555; line-height: 1.8;">
             <li>Quality healthcare and medical services</li>
@@ -107,7 +109,7 @@ const emailTemplates = {
             <li>Comfortable living facilities and amenities</li>
             <li>Professional care and support staff</li>
           </ul>
-          <p style="color: #555; line-height: 1.6;">A receipt for your donation will be mailed to you for tax purposes.</p>
+          ${typeof amount === 'number' ? '<p style="color: #555; line-height: 1.6;">A receipt for your donation will be mailed to you for tax purposes.</p>' : ''}
           <p style="color: #555; line-height: 1.6;">With heartfelt gratitude,<br><strong>Golden Years Home Team</strong></p>
         </div>
       </div>
@@ -144,7 +146,7 @@ const emailTemplates = {
   newAdmissionNotification: (admissionData) => ({
     from: process.env.EMAIL_USER || "aneesliaqat557@gmail.com",
     to: process.env.ADMIN_EMAIL || "aneesliaqat557@gmail.com",
-    subject: `New Admission Application - ${admissionData.urgency} Priority`,
+    subject: `New Admission Application - ${admissionData.urgency || 'Normal'} Priority`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #3498db;">New Admission Application</h2>
@@ -153,16 +155,23 @@ const emailTemplates = {
           <p><strong>Name:</strong> ${admissionData.residentInfo.firstName} ${admissionData.residentInfo.lastName}</p>
           <p><strong>Age:</strong> ${admissionData.residentInfo.age}</p>
           <p><strong>Gender:</strong> ${admissionData.residentInfo.gender}</p>
+          <p><strong>Date of Birth:</strong> ${new Date(admissionData.residentInfo.dateOfBirth).toLocaleDateString()}</p>
           
           <h3>Contact Information:</h3>
           <p><strong>Contact Person:</strong> ${admissionData.contactInfo.contactName}</p>
           <p><strong>Relationship:</strong> ${admissionData.contactInfo.relationship}</p>
           <p><strong>Phone:</strong> ${admissionData.contactInfo.phone}</p>
-          <p><strong>Email:</strong> ${admissionData.contactInfo.email}</p>
+          <p><strong>Email:</strong> ${admissionData.contactInfo.email || 'Not provided'}</p>
+          <p><strong>Address:</strong> ${admissionData.contactInfo.address}</p>
           
-          <p><strong>Urgency:</strong> ${admissionData.urgency}</p>
-          <p><strong>Care Level:</strong> ${admissionData.medicalInfo.careLevel}</p>
-          <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+          <h3>Medical Information:</h3>
+          <p><strong>Care Level Needed:</strong> ${admissionData.medicalInfo.careLevel}</p>
+          <p><strong>Mobility Level:</strong> ${admissionData.medicalInfo.mobility}</p>
+          <p><strong>Medical Conditions:</strong> ${admissionData.medicalInfo.conditions || 'None specified'}</p>
+          <p><strong>Current Medications:</strong> ${admissionData.medicalInfo.medications || 'None specified'}</p>
+          <p><strong>Primary Physician:</strong> ${admissionData.medicalInfo.primaryPhysician || 'Not specified'}</p>
+          
+          <p><strong>Application Date:</strong> ${new Date().toLocaleString()}</p>
         </div>
       </div>
     `,

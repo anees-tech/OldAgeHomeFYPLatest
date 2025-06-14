@@ -40,27 +40,27 @@
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
 .stat-card h3 {
-  font-size: 2rem;
-  color: #667eea;
+  font-size: 2.5rem;
+  color: #f59e0b; /* Accent color */
   margin: 0 0 0.5rem 0;
 }
 
 .stat-card p {
-  color: #666;
+  font-size: 1rem;
+  color: #7f8c8d;
   margin: 0;
-  font-weight: 500;
 }
 
 .admissions-table {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-x: auto; /* For responsive tables */
 }
 
 .admissions-table table {
@@ -70,201 +70,193 @@
 
 .admissions-table th,
 .admissions-table td {
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e1e8ed;
 }
 
 .admissions-table th {
-  background: #f8f9fa;
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.admissions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admissions-table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.admissions-table strong {
   font-weight: 600;
   color: #2c3e50;
 }
 
-.admissions-table tr:hover {
-  background: #f8f9fa;
+.admissions-table small {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  display: block;
+  margin-top: 0.25rem;
 }
 
 .urgency-badge,
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  color: white;
-  font-size: 0.85rem;
+.status-badge { /* Combined for modal and table consistency */
+  padding: 0.3rem 0.75rem;
+  border-radius: 1rem; /* Pill shape */
+  font-size: 0.8rem;
   font-weight: 500;
+  color: white;
   text-transform: capitalize;
+  display: inline-block;
+  text-align: center;
+  min-width: 100px; /* Ensure badges have some width */
 }
 
 .status-select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ced4da;
   border-radius: 4px;
+  font-size: 0.9rem;
+  background: white;
+  min-width: 130px;
   font-weight: 500;
 }
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
+.status-select:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+  outline: none;
 }
 
 .action-buttons .btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
+  margin-right: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+.action-buttons .btn:last-child {
+  margin-right: 0;
 }
 
 .view-btn {
-  background: #667eea;
+  background-color: #3498db;
   color: white;
+  border: none;
 }
-
 .view-btn:hover {
-  background: #5a6fd8;
+  background-color: #2980b9;
 }
 
 .delete-btn {
-  background: #e74c3c;
+  background-color: #e74c3c;
   color: white;
+  border: none;
 }
-
 .delete-btn:hover {
-  background: #c0392b;
+  background-color: #c0392b;
 }
 
 /* Modal Styles */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  /* Uses styles from admin.css */
 }
 
-.admission-modal {
-  background: white;
-  border-radius: 12px;
+.admission-modal .modal-content { /* Specific class for admission modal if needed, or use generic .modal-content */
+  max-width: 800px; /* Wider for detailed info */
   width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
-  overflow-y: auto;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
+.admission-modal .modal-header {
+  /* Uses styles from admin.css */
 }
-
-.modal-header h3 {
-  margin: 0;
+.admission-modal .modal-header h3 {
   color: #2c3e50;
 }
 
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.admission-modal .modal-close {
+  /* Uses .close-btn from admin.css */
 }
 
-.modal-content {
+.admission-modal .modal-body { /* If you wrap content in modal-body */
   padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr; /* Default to 1 column */
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .details-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on larger screens */
+    gap: 2rem;
+  }
 }
 
 .detail-section {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 8px;
+  background-color: #f9fafb;
+  padding: 1.25rem;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
-
 .detail-section.full-width {
-  grid-column: 1 / -1;
+  grid-column: 1 / -1; /* Span full width if needed */
 }
 
 .detail-section h4 {
-  color: #2c3e50;
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #667eea;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f59e0b; /* Accent color */
+  margin-top: 0;
+  margin-bottom: 1rem;
   padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e1e8ed;
 }
 
 .detail-row {
   display: flex;
-  margin-bottom: 0.75rem;
-  align-items: center;
+  flex-direction: column; /* Stack label and value */
+  margin-bottom: 0.85rem;
+  font-size: 0.9rem;
+}
+.detail-row:last-child {
+  margin-bottom: 0;
 }
 
 .detail-row label {
   font-weight: 600;
   color: #555;
-  min-width: 120px;
-  margin-right: 1rem;
+  margin-bottom: 0.25rem;
+  display: block;
 }
 
-.detail-row span {
+.detail-row span,
+.detail-row p { /* For multi-line content like medical conditions */
   color: #333;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.detail-row p {
+  margin: 0;
+  background-color: #fff;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e1e8ed;
+}
+
+
+.admission-modal .modal-footer {
+  /* Uses styles from admin.css */
+  padding: 1rem 1.5rem;
 }
 
 .loading {
-  text-align: center;
-  padding: 3rem;
+  /* Uses styles from admin.css */
   font-size: 1.2rem;
-  color: #666;
-}
-
-@media (max-width: 768px) {
-  .admissions-management {
-    padding: 1rem;
-  }
-  
-  .management-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .admissions-table {
-    overflow-x: auto;
-  }
-  
-  .admissions-table table {
-    min-width: 800px;
-  }
-  
-  .admission-modal {
-    width: 95%;
-    margin: 1rem;
-  }
-  
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
+  padding: 3rem;
 }

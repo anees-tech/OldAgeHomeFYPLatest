@@ -16,8 +16,22 @@ const GallerySchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['facilities', 'activities', 'events', 'residents', 'staff', 'other'],
-    default: 'other'
+    // Updated enum to include all categories from frontend, in lowercase
+    enum: [
+      'activities', 
+      'facilities', 
+      'events', 
+      'residents', 
+      'staff', 
+      'dining', 
+      'recreation', 
+      'healthcare', 
+      'celebrations', 
+      'general', 
+      'other' // Keep 'other' as a fallback/default
+    ],
+    default: 'other',
+    required: true // It's good practice to require category if it's a key part of the model
   },
   isActive: {
     type: Boolean,

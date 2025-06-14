@@ -1,17 +1,20 @@
 .contacts-management {
-  padding: 2rem;
+  padding: 1rem; /* Consistent padding */
 }
 
 .management-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .management-header h2 {
-  color: #2c3e50;
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0;
 }
 
@@ -19,251 +22,220 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  margin-bottom: 1.5rem; /* Added margin for spacing */
 }
 
-.filter-select {
-  padding: 0.5rem 1rem;
-  border: 2px solid #e1e8ed;
-  border-radius: 6px;
-  font-size: 1rem;
-  background: white;
+.filter-controls .search-bar input[type="text"],
+.filter-controls .filter-select { /* Target select directly */
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  min-width: 180px;
+}
+.filter-controls .search-bar input[type="text"]:focus,
+.filter-controls .filter-select:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
 }
 
 .contacts-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive columns */
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
+.contacts-stats .stat-card { /* Using .stat-card from admin.css as a base */
+  /* padding: 1.5rem; */ /* Already in admin.css */
+  /* text-align: left; */ /* Override if needed, default is often center or left */
+  /* border-left-width: 4px; */ /* Already in admin.css */
+}
+.contacts-stats .stat-card h3 {
+  /* font-size: 1.875rem; */ /* From admin.css, adjust if needed */
+  /* margin-bottom: 0.25rem; */ /* From admin.css */
+}
+.contacts-stats .stat-card p {
+  /* font-size: 0.875rem; */ /* From admin.css */
+  /* color: #6b7280; */ /* From admin.css */
+  /* text-transform: uppercase; */ /* From admin.css */
 }
 
-.stat-card h3 {
-  font-size: 2rem;
-  color: #667eea;
-  margin: 0 0 0.5rem 0;
-}
 
-.stat-card p {
-  color: #666;
-  margin: 0;
-  font-weight: 500;
+.contacts-table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .contacts-table {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.contacts-table table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 900px;
 }
 
 .contacts-table th,
 .contacts-table td {
-  padding: 1rem;
+  padding: 0.875rem 1rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
 }
 
 .contacts-table th {
-  background: #f8f9fa;
+  background-color: #f9fafb;
   font-weight: 600;
-  color: #2c3e50;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.contacts-table tbody tr:hover {
+  background-color: #f3f4f6;
 }
 
-.contacts-table tr:hover {
-  background: #f8f9fa;
+.contacts-table .contact-name-column strong { /* More specific selector */
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+}
+.contacts-table .contact-name-column small { /* More specific selector */
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: block; /* Ensure it's on a new line if needed */
+  margin-top: 0.125rem;
 }
 
-.urgency-badge,
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  color: white;
-  font-size: 0.85rem;
+.urgency-badge-table, .status-badge-table {
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.25rem; /* Consistent with other badges */
+  font-size: 0.75rem;
   font-weight: 500;
+  color: white; /* Default, will be overridden by specific colors */
   text-transform: capitalize;
+  display: inline-block; /* So it doesn't take full width */
+  text-align: center;
 }
 
-.status-select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-weight: 500;
+.status-select-table { /* More specific class for table select */
+  padding: 0.375rem 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  min-width: 120px;
+  background-color: white; /* Ensure background for select */
+}
+.status-select-table:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2); /* Smaller shadow for table select */
 }
 
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
+.contacts-table .action-buttons .btn {
+  /* Reuses .btn, .edit-btn, .delete-btn from admin.css */
+  margin-right: 0.5rem;
+  padding: 0.375rem 0.75rem; /* Smaller buttons for table actions */
+  font-size: 0.75rem;
+}
+.contacts-table .action-buttons .btn:last-child {
+  margin-right: 0;
+}
+.contacts-table .view-btn { /* Specific style if needed, or use .secondary-btn */
+  background-color: #e0e7ff; /* Light indigo */
+  color: #3730a3; /* Indigo */
+  border-color: #c7d2fe;
+}
+.contacts-table .view-btn:hover {
+  background-color: #c7d2fe;
 }
 
-.action-buttons .btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
+
+/* Contact Details Modal */
+.contact-modal .modal-content {
+  max-width: 750px;
 }
 
-.view-btn {
-  background: #667eea;
-  color: white;
-}
-
-.view-btn:hover {
-  background: #5a6fd8;
-}
-
-.delete-btn {
-  background: #e74c3c;
-  color: white;
-}
-
-.delete-btn:hover {
-  background: #c0392b;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.contact-modal {
-  background: white;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
+.contact-modal .modal-body { /* Assuming modal content is wrapped in .modal-body */
+  padding: 1.5rem; /* Add padding if not on .modal-content form */
+  max-height: 70vh; /* Or adjust as needed */
   overflow-y: auto;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-}
-
-.modal-content {
-  padding: 1.5rem;
-}
-
-.contact-details {
-  display: grid;
-  gap: 2rem;
-}
-
 .detail-section {
-  background: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb; /* Lighter border */
 }
-
-.detail-section.full-width {
-  grid-column: 1 / -1;
+.detail-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .detail-section h4 {
-  color: #2c3e50;
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #667eea;
-  padding-bottom: 0.5rem;
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 600;
+  color: #f59e0b;
+  margin-bottom: 1rem; /* Increased margin */
 }
 
 .detail-row {
-  display: flex;
+  display: grid; /* Use grid for better alignment */
+  grid-template-columns: 150px 1fr; /* Fixed label width, flexible value */
+  gap: 0.75rem; /* Space between label and value */
   margin-bottom: 0.75rem;
-  align-items: center;
+  font-size: 0.875rem;
+  align-items: start; /* Align items to the start of the grid cell */
 }
 
 .detail-row label {
-  font-weight: 600;
-  color: #555;
-  min-width: 140px;
-  margin-right: 1rem;
+  font-weight: 500;
+  color: #4b5563;
+  padding-top: 0.125rem; /* Align with value if value wraps */
 }
 
-.detail-row span {
-  color: #333;
+.detail-row span,
+.detail-row .message-content-modal { /* Renamed for clarity */
+  color: #1f2937;
+  word-break: break-word;
 }
 
-.message-content {
-  background: white;
-  padding: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  line-height: 1.6;
-  color: #333;
+.message-content-modal {
+  background-color: #f9fafb;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
   white-space: pre-wrap;
+  line-height: 1.6;
+  border: 1px solid #e5e7eb; /* Add a light border */
 }
 
-.loading {
+.urgency-badge-modal, .status-badge-modal {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem; /* Slightly larger for modal */
+  font-weight: 500;
+  color: white;
+  text-transform: capitalize;
+  display: inline-block; /* Ensure it doesn't take full width */
+}
+
+/* No results message */
+.no-contacts-message {
   text-align: center;
-  padding: 3rem;
-  font-size: 1.2rem;
-  color: #666;
+  padding: 2rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+  grid-column: 1 / -1; /* If used inside a grid */
 }
-
-@media (max-width: 768px) {
-  .contacts-management {
-    padding: 1rem;
-  }
-  
-  .management-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .contacts-table {
-    overflow-x: auto;
-  }
-  
-  .contacts-table table {
-    min-width: 800px;
-  }
-  
-  .contact-modal {
-    width: 95%;
-    margin: 1rem;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
+.no-contacts-message i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  color: #9ca3af;
+}
+.no-contacts-message h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
 }

@@ -19,6 +19,7 @@ function DonationPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState('');
+  const [donationCategory, setDonationCategory] = useState('general');
 
   const predefinedAmounts = [25, 50, 100, 250, 500, 1000];
   
@@ -67,23 +68,43 @@ function DonationPage() {
     const donationData = {
       type: donationType,
       amount: donationType === 'monetary' ? parseFloat(finalAmount) : null,
-      donorInfo: donorInfo,
-      timestamp: new Date().toISOString()
+      donationType: 'one-time', // This represents recurrence (e.g., one-time, monthly)
+                                // The backend model also has a 'donationType' field.
+                                // Ensure this aligns with your backend's expectation for this field.
+                                // If the backend expects 'monetary', 'goods', 'volunteer' in a field named 'donationType',
+                                // then this might need adjustment. However, your backend route seems to use 'type' for that.
+      category: donationCategory,
+      paymentMethod: 'credit-card', // Placeholder, make dynamic if needed
+      message: '', // Placeholder, add input if needed
+      donorInfo: {
+        ...donorInfo, // Spread existing donorInfo
+        // Ensure all fields from the form are included here if not already part of donorInfo state
+      },
+      // timestamp: new Date().toISOString() // This is redundant if backend uses Mongoose timestamps
     };
 
     try {
       const response = await axios.post('http://localhost:5000/api/donations/create', donationData);
-      setSubmitStatus('success');
-      // Reset form
-      setDonationAmount('');
-      setCustomAmount('');
-      setDonorInfo({
-        firstName: '', lastName: '', email: '', phone: '',
-        address: '', city: '', state: '', zipCode: '', isAnonymous: false
-      });
+      
+      if (response.data.success) {
+        setSubmitStatus('success');
+        // Reset form
+        setDonationType('monetary');
+        setDonationAmount('');
+        setCustomAmount('');
+        setDonorInfo({
+          firstName: '', lastName: '', email: '', phone: '',
+          address: '', city: '', state: '', zipCode: '', isAnonymous: false
+        });
+        setDonationCategory('general'); // Also reset category
+      } else {
+        // Use message from backend if available
+        setSubmitStatus(response.data.message || 'error');
+      }
     } catch (error) {
       console.error('Error processing donation:', error);
-      setSubmitStatus('error');
+      // Use error message from backend if available, otherwise generic
+      setSubmitStatus(error.response?.data?.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
@@ -180,6 +201,55 @@ function DonationPage() {
                   </label>
                 </div>
               </div>
+
+              {/* Donation Category - ADD THIS SECTION */}
+              {donationType === 'monetary' && (
+                <div className="form-section">
+                  <h3 className="section-subtitle">How should we use your donation?</h3>
+                  <div className="category-options">
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="donationCategory"
+                        value="general"
+                        checked={donationCategory === 'general'}
+                        onChange={(e) => setDonationCategory(e.target.value)}
+                      />
+                      <span className="radio-label">General Support</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="donationCategory"
+                        value="medical"
+                        checked={donationCategory === 'medical'}
+                        onChange={(e) => setDonationCategory(e.target.value)}
+                      />
+                      <span className="radio-label">Medical Care</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="donationCategory"
+                        value="activities"
+                        checked={donationCategory === 'activities'}
+                        onChange={(e) => setDonationCategory(e.target.value)}
+                      />
+                      <span className="radio-label">Activities & Recreation</span>
+                    </label>
+                    <label className="radio-option">
+                      <input
+                        type="radio"
+                        name="donationCategory"
+                        value="facilities"
+                        checked={donationCategory === 'facilities'}
+                        onChange={(e) => setDonationCategory(e.target.value)}
+                      />
+                      <span className="radio-label">Facilities & Maintenance</span>
+                    </label>
+                  </div>
+                </div>
+              )}
 
               {/* Monetary Donation Amount */}
               {donationType === 'monetary' && (

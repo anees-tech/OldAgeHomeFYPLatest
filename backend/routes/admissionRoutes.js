@@ -1,204 +1,182 @@
 const express = require("express");
 const router = express.Router();
 const { emailTemplates, sendEmail } = require("../config/emailConfig");
+const Admission = require("../models/Admission"); // Import the Admission model
 
-// In-memory storage for demo
-let admissions = [
-  {
-    _id: "1",
-    residentInfo: {
-      firstName: "Mary",
-      lastName: "Johnson",
-      age: 78,
-      gender: "female",
-      dateOfBirth: new Date("1945-03-15"),
-    },
-    contactInfo: {
-      contactName: "Robert Johnson",
-      relationship: "son",
-      phone: "555-0123",
-      email: "robert.j@email.com",
-      address: "123 Main St, Anytown, ST 12345"
-    },
-    medicalInfo: {
-      conditions: "Diabetes, High blood pressure",
-      medications: "Metformin, Lisinopril",
-      careLevel: "assisted-living",
-      mobility: "walker",
-      diet: "diabetic"
-    },
-    urgency: "within_month",
-    status: "pending",
-    additionalInfo: "Mom needs help with daily activities but is still fairly independent.",
-    createdAt: new Date("2024-12-01"),
-  },
-  {
-    _id: "2",
-    residentInfo: {
-      firstName: "James",
-      lastName: "Wilson",
-      age: 82,
-      gender: "male",
-      dateOfBirth: new Date("1941-08-22"),
-    },
-    contactInfo: {
-      contactName: "Linda Wilson",
-      relationship: "daughter",
-      phone: "555-0124",
-      email: "linda.w@email.com",
-      address: "456 Oak Ave, Somewhere, ST 67890"
-    },
-    medicalInfo: {
-      conditions: "Alzheimer's disease, Arthritis",
-      medications: "Donepezil, Ibuprofen",
-      careLevel: "memory-care",
-      mobility: "wheelchair",
-      diet: "regular"
-    },
-    urgency: "immediate",
-    status: "under_review",
-    additionalInfo: "Dad has been diagnosed with early-stage Alzheimer's and needs specialized care.",
-    createdAt: new Date("2024-11-28"),
+// Calculate age from date of birth
+const calculateAge = (dateOfBirth) => {
+  const today = new Date();
+  const birthDate = new Date(dateOfBirth);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
   }
-];
+  return age;
+};
 
-// Submit admission application
-router.post("/", async (req, res) => {
+// Submit admission application - UPDATED TO SAVE TO MONGODB
+router.post("/apply", async (req, res) => {
   try {
     const {
-      residentInfo,
-      contactInfo,
-      medicalInfo,
-      urgency,
-      additionalInfo
+      // Applicant Information
+      firstName, lastName, dateOfBirth, gender, maritalStatus,
+      // Contact Information (of applicant)
+      phone, email, address, city, state, zipCode,
+      // Emergency Contact
+      emergencyContactName, emergencyContactPhone, emergencyContactRelation,
+      // Medical Information
+      primaryPhysician, medicalConditions, medications, mobilityLevel,
+      // Care Requirements
+      careLevel, specialNeeds, preferredRoom, moveInDate, additionalComments
     } = req.body;
 
     // Basic validation
-    if (!residentInfo?.firstName || !residentInfo?.lastName || !contactInfo?.contactName || !contactInfo?.email) {
-      return res.status(400).json({ 
-        message: "Please fill in all required fields" 
-      });
+    if (!firstName || !lastName || !dateOfBirth || !gender || !phone || !address || !city || !state || !zipCode || !emergencyContactName || !emergencyContactPhone || !emergencyContactRelation || !mobilityLevel || !careLevel) {
+      return res.status(400).json({ message: "Please fill in all required fields" });
     }
 
-    // Create admission record
-    const newAdmission = {
-      _id: Date.now().toString(),
+    const age = calculateAge(dateOfBirth);
+
+    const admissionDataForDb = {
       residentInfo: {
-        firstName: residentInfo.firstName,
-        lastName: residentInfo.lastName,
-        age: parseInt(residentInfo.age),
-        gender: residentInfo.gender,
-        dateOfBirth: new Date(residentInfo.dateOfBirth),
+        firstName, lastName, age, gender, dateOfBirth: new Date(dateOfBirth), maritalStatus: maritalStatus || ""
       },
       contactInfo: {
-        contactName: contactInfo.contactName,
-        relationship: contactInfo.relationship,
-        phone: contactInfo.phone || "",
-        email: contactInfo.email,
-        address: contactInfo.address || ""
+        contactName: emergencyContactName,
+        relationship: emergencyContactRelation,
+        phone: emergencyContactPhone, // Emergency contact's phone
+        email: email || "",           // Applicant's email
+        address: `${address}, ${city}, ${state} ${zipCode}` // Applicant's address
       },
+      applicantPhone: phone, // Applicant's own phone
       medicalInfo: {
-        conditions: medicalInfo?.conditions || "",
-        medications: medicalInfo?.medications || "",
-        careLevel: medicalInfo?.careLevel || "independent",
-        mobility: medicalInfo?.mobility || "independent",
-        diet: medicalInfo?.diet || "regular"
+        primaryPhysician: primaryPhysician || "",
+        medicalConditions: medicalConditions || "",
+        medications: medications || "",
+        mobility: mobilityLevel, // Schema uses 'mobility'
+        careLevel: careLevel,
+        diet: "regular", 
       },
-      urgency: urgency || "flexible",
+      additionalInfo: additionalComments || "", // Schema uses 'additionalInfo'
+      specialNeeds: specialNeeds || "",
+      preferredRoom: preferredRoom || "",
+      moveInDate: moveInDate ? new Date(moveInDate) : null,
+      urgency: "flexible", 
       status: "pending",
-      additionalInfo: additionalInfo || "",
-      createdAt: new Date(),
+      originalFormData: req.body 
     };
 
-    // Save admission
-    admissions.push(newAdmission);
+    const newAdmissionDocument = new Admission(admissionDataForDb);
+    const savedAdmission = await newAdmissionDocument.save();
 
-    // Send confirmation email to contact person
+    // Send confirmation email to applicant (if email provided)
+    if (email) {
+      try {
+        const confirmationEmail = emailTemplates.admissionConfirmation(
+          firstName, // Send to applicant, using their name
+          email,
+          `${firstName} ${lastName}` // Resident's name
+        );
+        await sendEmail(confirmationEmail);
+      } catch (emailError) {
+        console.error("Applicant confirmation email sending failed:", emailError);
+      }
+    }
+
+    // Send notification email to admin
     try {
-      const confirmationEmail = emailTemplates.admissionConfirmation(
-        contactInfo.contactName,
-        contactInfo.email,
-        `${residentInfo.firstName} ${residentInfo.lastName}`
-      );
-      await sendEmail(confirmationEmail);
+      const adminNotification = emailTemplates.newAdmissionNotification({
+        residentInfo: savedAdmission.residentInfo,
+        contactInfo: savedAdmission.contactInfo, // This is the emergency contact info
+        medicalInfo: savedAdmission.medicalInfo,
+        urgency: savedAdmission.urgency
+      });
+      await sendEmail(adminNotification);
     } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+      console.error("Admin notification email failed:", emailError);
     }
 
     res.status(201).json({
       message: "Admission application submitted successfully! We will contact you within 2-3 business days.",
-      admission: newAdmission,
+      admission: savedAdmission,
       success: true
     });
+
   } catch (err) {
-    console.error("Admission creation error:", err);
-    res.status(500).json({ message: "Server Error" });
+    console.error("Admission creation error:", err.message, err.stack);
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation Error", errors: err.errors });
+    }
+    res.status(500).json({ message: "Server Error while creating admission." });
   }
 });
 
-// Get all admissions (admin only)
-router.get("/", async (req, res) => {
+// Get all admissions (admin only) - UPDATED TO FETCH FROM DB
+router.get("/all", async (req, res) => {
   try {
     const { status, urgency } = req.query;
-    let filteredAdmissions = [...admissions];
+    let query = {};
 
     if (status && status !== 'all') {
-      filteredAdmissions = filteredAdmissions.filter(admission => admission.status === status);
+      query.status = status;
     }
-
     if (urgency && urgency !== 'all') {
-      filteredAdmissions = filteredAdmissions.filter(admission => admission.urgency === urgency);
+      query.urgency = urgency;
     }
 
-    // Sort by creation date (newest first)
-    filteredAdmissions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    res.json(filteredAdmissions);
+    const dbAdmissions = await Admission.find(query).sort({ createdAt: -1 });
+    res.json(dbAdmissions);
   } catch (err) {
-    console.error("Admissions fetch error:", err);
+    console.error("Admissions fetch error from DB:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Update admission status
+// Update admission status - TODO: Update to use MongoDB
 router.put("/:id/status", async (req, res) => {
   try {
     const { status } = req.body;
-    const admissionIndex = admissions.findIndex(admission => admission._id === req.params.id);
+    // const admissionIndex = admissions.findIndex(admission => admission._id === req.params.id); // In-memory
     
-    if (admissionIndex === -1) {
+    // DB equivalent:
+    const updatedAdmission = await Admission.findByIdAndUpdate(
+      req.params.id,
+      { status: status, updatedAt: new Date() },
+      { new: true } // Returns the updated document
+    );
+    
+    if (!updatedAdmission) {
       return res.status(404).json({ message: "Admission not found" });
     }
 
-    admissions[admissionIndex].status = status;
-    admissions[admissionIndex].updatedAt = new Date();
+    // Send status update email (optional)
+    // try {
+    //   console.log(`Admission status updated to ${status} for ${updatedAdmission.residentInfo.firstName}`);
+    // } catch (emailError) {
+    //   console.error("Status update email failed:", emailError);
+    // }
 
-    // Send status update email
-    try {
-      const admission = admissions[admissionIndex];
-      // You can create different email templates for different statuses
-      console.log(`Admission status updated to ${status} for ${admission.residentInfo.firstName} ${admission.residentInfo.lastName}`);
-    } catch (emailError) {
-      console.error("Status update email failed:", emailError);
-    }
-
-    res.json({ message: "Admission status updated successfully" });
+    res.json({ message: "Admission status updated successfully", admission: updatedAdmission });
   } catch (err) {
     console.error("Admission status update error:", err);
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Delete admission
+// Delete admission - TODO: Update to use MongoDB
 router.delete("/:id", async (req, res) => {
   try {
-    const admissionIndex = admissions.findIndex(admission => admission._id === req.params.id);
+    // const admissionIndex = admissions.findIndex(admission => admission._id === req.params.id); // In-memory
     
-    if (admissionIndex === -1) {
+    // DB equivalent:
+    const deletedAdmission = await Admission.findByIdAndDelete(req.params.id);
+
+    if (!deletedAdmission) {
       return res.status(404).json({ message: "Admission not found" });
     }
 
-    admissions.splice(admissionIndex, 1);
     res.json({ message: "Admission deleted successfully" });
   } catch (err) {
     console.error("Admission delete error:", err);
@@ -206,34 +184,32 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Get admission form options
+// Get admission form options (remains the same as it provides static options)
 router.get("/form-options", async (req, res) => {
   try {
     const options = {
       careLevels: [
         { value: 'independent', label: 'Independent Living' },
-        { value: 'assisted-living', label: 'Assisted Living' },
-        { value: 'memory-care', label: 'Memory Care' },
-        { value: 'skilled-nursing', label: 'Skilled Nursing' }
+        { value: 'assisted', label: 'Assisted Living' },
+        { value: 'memory', label: 'Memory Care' },
+        { value: 'skilled', label: 'Skilled Nursing' }
       ],
       mobilityLevels: [
         { value: 'independent', label: 'Independent' },
-        { value: 'walker', label: 'Uses Walker' },
-        { value: 'wheelchair', label: 'Uses Wheelchair' },
-        { value: 'assistance', label: 'Needs Assistance' }
+        { value: 'assistive-device', label: 'Uses Assistive Device' },
+        { value: 'wheelchair', label: 'Wheelchair' },
+        { value: 'bedridden', label: 'Bedridden' }
       ],
-      dietTypes: [
-        { value: 'regular', label: 'Regular Diet' },
-        { value: 'diabetic', label: 'Diabetic Diet' },
-        { value: 'low-sodium', label: 'Low Sodium' },
-        { value: 'pureed', label: 'Pureed/Soft Foods' },
-        { value: 'special', label: 'Special Diet (specify in notes)' }
+      roomTypes: [
+        { value: 'private', label: 'Private Room' },
+        { value: 'semi-private', label: 'Semi-Private Room' }
       ],
-      urgencyLevels: [
-        { value: 'immediate', label: 'Immediate (within 1 week)' },
-        { value: 'within_month', label: 'Within 1 month' },
-        { value: 'within_3_months', label: 'Within 3 months' },
-        { value: 'flexible', label: 'Flexible timing' }
+      relationships: [
+        { value: 'spouse', label: 'Spouse' },
+        { value: 'child', label: 'Child' },
+        { value: 'sibling', label: 'Sibling' },
+        { value: 'friend', label: 'Friend' },
+        { value: 'other', label: 'Other' }
       ]
     };
     

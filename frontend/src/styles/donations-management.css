@@ -1,0 +1,208 @@
+/* Donations Management Specific Styles */
+.donations-management {
+  /* padding: 1rem; Inherit from admin-main or .admin-content if used */
+}
+
+/* Header for Donations Page */
+.donations-header {
+  /* display: flex; */ /* From .management-header in admin.css */
+  /* justify-content: space-between; */
+  /* align-items: center; */
+  /* margin-bottom: 1.5rem; */
+  /* flex-wrap: wrap; */
+  /* gap: 1rem; */
+}
+
+.donations-header h2 {
+  /* font-size: 1.5rem; */ /* From .management-header h2 in admin.css */
+  /* font-weight: 600; */
+  /* color: #1f2937; */
+  /* margin: 0; */
+}
+
+.header-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem; /* Space from title if on new line */
+}
+@media (min-width: 768px) {
+  .header-stats {
+    margin-top: 0; /* Align with title on larger screens */
+  }
+}
+
+.header-stats .stat-card {
+  background-color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem; /* 6px */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 150px;
+}
+
+.header-stats .stat-label {
+  font-size: 0.75rem; /* text-xs */
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.header-stats .stat-value {
+  font-size: 1.25rem; /* text-xl */
+  font-weight: 600;
+  color: #f59e0b; /* Accent color */
+}
+
+
+/* Filters for Donations */
+.donations-filters {
+  /* display: flex; */ /* From .filter-controls in admin.css */
+  /* gap: 1rem; */
+  /* margin-bottom: 1.5rem; */
+  /* flex-wrap: wrap; */
+  /* align-items: center; */
+}
+.donations-filters .search-input,
+.donations-filters .filter-select {
+  /* width: 100%; */ /* From .search-input, .filter-select in admin.css */
+  /* padding: 0.625rem 0.75rem; */
+  /* border: 1px solid #d1d5db; */
+  /* border-radius: 0.375rem; */
+  /* font-size: 0.875rem; */
+}
+
+
+/* Donations Table Specifics */
+.donations-table-container {
+  /* overflow-x: auto; */ /* From .table-container in admin.css */
+  /* background-color: white; */
+  /* border-radius: 0.5rem; */
+  /* box-shadow: 0 1px 3px rgba(0,0,0,0.1); */
+}
+
+.donations-table {
+  /* width: 100%; */ /* From .data-table in admin.css */
+  /* border-collapse: collapse; */
+  /* min-width: 900px; */ /* Adjust as needed */
+}
+
+.donations-table th,
+.donations-table td {
+  /* padding: 0.875rem 1rem; */ /* From .data-table th, td in admin.css */
+  /* text-align: left; */
+  /* border-bottom: 1px solid #e5e7eb; */
+  /* font-size: 0.875rem; */
+  /* vertical-align: middle; */
+}
+
+.donations-table th {
+  /* background-color: #f9fafb; */ /* From .data-table th in admin.css */
+  /* font-weight: 600; */
+  /* color: #4b5563; */
+  /* text-transform: uppercase; */
+  /* letter-spacing: 0.05em; */
+}
+
+.donations-table .donor-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.donations-table .donor-info strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.donations-table .recurring-badge {
+  font-size: 0.7rem;
+  background-color: #e0e7ff; /* Light indigo */
+  color: #3730a3; /* Indigo */
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.donations-table .amount-cell strong {
+  color: #059669; /* Green for monetary amounts */
+  font-weight: 600;
+}
+
+.donations-table .type-badge,
+.donations-table .category-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  display: inline-block;
+  background-color: #e5e7eb; /* Default light gray */
+  color: #4b5563; /* Default medium gray */
+}
+
+.donations-table .category-badge {
+  background-color: #dbeafe; /* Light blue for category */
+  color: #1e40af; /* Dark blue */
+}
+
+.donations-table .status-badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 1rem; /* Pill shape */
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase; /* Changed from capitalize for status */
+  min-width: 80px; /* Ensure consistent width */
+  text-align: center;
+  display: inline-block;
+}
+
+.donations-table .status-badge.status-completed {
+  background-color: #10b981; /* Green */
+}
+.donations-table .status-badge.status-pending {
+  background-color: #f59e0b; /* Orange */
+}
+.donations-table .status-badge.status-failed {
+  background-color: #ef4444; /* Red */
+}
+.donations-table .status-badge.status-refunded {
+  background-color: #6b7280; /* Gray */
+}
+.donations-table .status-badge.status-default {
+  background-color: #a1a1aa; /* Neutral gray */
+}
+
+
+.donations-table .action-buttons {
+  /* display: flex; */ /* From .action-buttons in admin.css */
+  /* gap: 0.5rem; */
+  /* align-items: center; */ /* Align select and button */
+}
+
+.donations-table .status-select {
+  /* padding: 0.375rem 0.625rem; */ /* From .status-select in admin.css */
+  /* border: 1px solid #d1d5db; */
+  /* border-radius: 0.375rem; */
+  /* font-size: 0.875rem; */
+  /* min-width: 120px; */
+  /* background-color: white; */
+}
+.donations-table .action-buttons .delete-btn {
+  /* Uses .btn and .delete-btn from admin.css */
+  /* padding: 0.375rem 0.75rem; */
+}
+
+/* No results message */
+.donations-table .no-results {
+  /* text-align: center; */ /* From .no-results in admin.css */
+  /* padding: 2rem; */
+  /* color: #6b7280; */
+  /* font-style: italic; */
+}
